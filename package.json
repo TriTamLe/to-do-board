@@ -10,18 +10,10 @@
     "format": "biome format",
     "lint": "biome lint",
     "check": "biome check",
-    "typecheck": "tsc --noEmit",
-    "post-cta-init": "npx create-db@latest --user-agent tanstack/tsrouter",
-    "db:generate": "dotenv -e .env.local -- prisma generate",
-    "db:push": "dotenv -e .env.local -- prisma db push",
-    "db:migrate": "dotenv -e .env.local -- prisma migrate dev",
-    "db:studio": "dotenv -e .env.local -- prisma studio",
-    "db:seed": "dotenv -e .env.local -- prisma db seed"
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@convex-dev/react-query": "0.1.0",
-    "@prisma/adapter-pg": "^7.2.0",
-    "@prisma/client": "^7.2.0",
     "@tailwindcss/vite": "^4.0.6",
     "@tanstack/react-devtools": "^0.7.0",
     "@tanstack/react-query": "^5.66.5",
@@ -36,7 +28,6 @@
     "convex": "^1.27.3",
     "lucide-react": "^0.561.0",
     "nitro": "npm:nitro-nightly@latest",
-    "prisma": "^7.2.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "tailwind-merge": "^3.0.2",

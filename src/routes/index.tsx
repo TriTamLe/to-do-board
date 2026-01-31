@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
 import { Check, Pencil, Trash2, X } from "lucide-react";
+import { useMemo, useState } from "react";
 
 export const Route = createFileRoute("/")({ component: App });
 
@@ -70,7 +70,7 @@ function App() {
 
 	return (
 		<div
-			className="min-h-screen bg-gradient-to-br from-amber-50 via-white to-sky-100 text-slate-900"
+			className="min-h-screen bg-linear-to-br from-amber-50 via-white to-sky-100 text-slate-900"
 			style={{
 				fontFamily: "'Space Grotesk', 'IBM Plex Sans', 'Segoe UI', sans-serif",
 			}}
@@ -110,7 +110,7 @@ function App() {
 							/>
 							<button
 								type="submit"
-								className="inline-flex items-center justify-center gap-2 rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-white shadow-lg shadow-slate-400/40 transition hover:translate-y-[-1px] hover:bg-slate-800"
+								className="inline-flex items-center justify-center gap-2 rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-white shadow-lg shadow-slate-400/40 transition hover:-translate-y-px hover:bg-slate-800"
 							>
 								Add task
 							</button>

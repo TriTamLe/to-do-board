@@ -4,7 +4,7 @@ This file provides guidance to any AI agents when working with code in this repo
 
 ## Project Overview
 
-A TanStack Start full-stack React application (TypeScript) using file-based routing, with dual database backends (Prisma/PostgreSQL and Convex). Uses pnpm as the package manager.
+A TanStack Start full-stack React application (TypeScript) using file-based routing, with Convex as the database backend. Uses pnpm as the package manager.
 
 ## Commands
 
@@ -16,13 +16,6 @@ pnpm lint             # Lint with Biome
 pnpm format           # Format with Biome
 pnpm check            # Biome check (lint + format)
 pnpm typecheck        # TypeScript type checking (tsc --noEmit)
-
-# Database (all use .env.local for env vars)
-pnpm db:generate      # Generate Prisma client
-pnpm db:push          # Push schema to database
-pnpm db:migrate       # Run Prisma migrations
-pnpm db:studio        # Open Prisma Studio
-pnpm db:seed          # Seed the database
 ```
 
 ## Architecture
@@ -32,7 +25,6 @@ pnpm db:seed          # Seed the database
 - **Root layout**: `src/routes/__root.tsx` — app shell with Header, devtools, and providers
 - **Path alias**: `@/*` maps to `./src/*`
 - **Integrations**: Convex provider in `src/integrations/convex/`, TanStack Query in `src/integrations/tanstack-query/`
-- **Database**: Prisma client singleton in `src/db.ts`, schema in `prisma/schema.prisma` (PostgreSQL)
 - **Convex**: Schema and mutations/queries in `convex/` directory
 - **Generated files**: `src/routeTree.gen.ts` and `src/generated/` are auto-generated — do not edit
 
