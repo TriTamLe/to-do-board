@@ -1,44 +1,33 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useMutation, useQuery } from "convex/react";
 import { Check, Pencil, Trash2, X } from "lucide-react";
 import { useMemo, useState } from "react";
+import { api } from "../../convex/_generated/api";
+import type { Doc } from "../../convex/_generated/dataModel";
 
 export const Route = createFileRoute("/")({ component: App });
 
-type Todo = {
-  id: string;
-  text: string;
-  createdAt: number;
-};
+type Todo = Doc<"todos">;
 
 function App() {
-  const [todos, setTodos] = useState<Todo[]>(() => [
-    { id: "seed-1", text: "Plan weeknight meals", createdAt: Date.now() },
-    {
-      id: "seed-2",
-      text: "Refactor onboarding checklist",
-      createdAt: Date.now() + 1,
-    },
-  ]);
+  const todos = useQuery(api.todos.list) ?? [];
+  const addTodo = useMutation(api.todos.add);
+  const removeTodo = useMutation(api.todos.remove);
   const [newTask, setNewTask] = useState("");
-  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<Todo["_id"] | null>(null);
   const [editingText, setEditingText] = useState("");
 
   const remainingCount = useMemo(() => todos.length, [todos]);
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     const trimmed = newTask.trim();
     if (!trimmed) return;
-    const next: Todo = {
-      id: crypto.randomUUID(),
-      text: trimmed,
-      createdAt: Date.now(),
-    };
-    setTodos((prev) => [next, ...prev]);
+    await addTodo({ text: trimmed });
     setNewTask("");
   };
 
-  const handleRemove = (id: string) => {
-    setTodos((prev) => prev.filter((todo) => todo.id !== id));
+  const handleRemove = async (id: Todo["_id"]) => {
+    await removeTodo({ id });
     if (editingId === id) {
       setEditingId(null);
       setEditingText("");
@@ -46,19 +35,16 @@ function App() {
   };
 
   const handleEditStart = (todo: Todo) => {
-    setEditingId(todo.id);
+    setEditingId(todo._id);
     setEditingText(todo.text);
   };
 
-  const handleEditSave = () => {
+  const handleEditSave = async () => {
     if (!editingId) return;
     const trimmed = editingText.trim();
     if (!trimmed) return;
-    setTodos((prev) =>
-      prev.map((todo) =>
-        todo.id === editingId ? { ...todo, text: trimmed } : todo,
-      ),
-    );
+    await removeTodo({ id: editingId });
+    await addTodo({ text: trimmed });
     setEditingId(null);
     setEditingText("");
   };
@@ -99,7 +85,7 @@ function App() {
               className="flex flex-col gap-3 md:flex-row"
               onSubmit={(event) => {
                 event.preventDefault();
-                handleAdd();
+                void handleAdd();
               }}
             >
               <input
@@ -129,10 +115,10 @@ function App() {
               ) : (
                 todos.map((todo) => (
                   <div
-                    key={todo.id}
+                    key={todo._id}
                     className="group hover:-translate-y-0.5 flex flex-col gap-3 rounded-2xl border border-slate-200/70 bg-white px-5 py-4 shadow-sm transition hover:border-slate-300 hover:shadow-md md:flex-row md:items-center md:justify-between"
                   >
-                    {editingId === todo.id ? (
+                    {editingId === todo._id ? (
                       <div className="flex w-full flex-1 flex-col gap-3 md:flex-row md:items-center">
                         <input
                           value={editingText}
@@ -142,7 +128,7 @@ function App() {
                           onKeyDown={(event) => {
                             if (event.key === "Enter") {
                               event.preventDefault();
-                              handleEditSave();
+                              void handleEditSave();
                             }
                             if (event.key === "Escape") {
                               handleEditCancel();
@@ -153,7 +139,9 @@ function App() {
                         <div className="flex flex-wrap gap-2">
                           <button
                             type="button"
-                            onClick={handleEditSave}
+                            onClick={() => {
+                              void handleEditSave();
+                            }}
                             className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-3 py-2 font-semibold text-white text-xs uppercase tracking-[0.2em] shadow-sm transition hover:bg-emerald-500"
                           >
                             <Check className="h-4 w-4" />
@@ -177,7 +165,7 @@ function App() {
                           </span>
                           <span className="text-slate-400 text-xs uppercase tracking-[0.2em]">
                             Created{" "}
-                            {new Date(todo.createdAt).toLocaleTimeString([], {
+                            {new Date(todo._creationTime).toLocaleTimeString([], {
                               hour: "2-digit",
                               minute: "2-digit",
                             })}
@@ -194,7 +182,9 @@ function App() {
                           </button>
                           <button
                             type="button"
-                            onClick={() => handleRemove(todo.id)}
+                            onClick={() => {
+                              void handleRemove(todo._id);
+                            }}
                             className="inline-flex items-center gap-2 rounded-xl bg-rose-500 px-3 py-2 font-semibold text-white text-xs uppercase tracking-[0.2em] shadow-sm transition hover:bg-rose-400"
                           >
                             <Trash2 className="h-4 w-4" />
