@@ -10,6 +10,7 @@
     "format": "biome format",
     "lint": "biome lint",
     "check": "biome check",
+    "write": "biome check --write --unsafe",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
