@@ -18,8 +18,15 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery } from "convex/react";
-import { GripVertical, Plus, Trash2 } from "lucide-react";
-import { Fragment, useEffect, useMemo, useRef, useState } from "react";
+import { Plus, Trash2 } from "lucide-react";
+import {
+	Fragment,
+	type KeyboardEvent,
+	useEffect,
+	useMemo,
+	useRef,
+	useState,
+} from "react";
 import { api } from "../../convex/_generated/api";
 
 export const Route = createFileRoute("/")({ component: App });
@@ -101,6 +108,10 @@ function App() {
 		() => columns.reduce((count, column) => count + column.tasks.length, 0),
 		[columns],
 	);
+	const activeColumn = useMemo(() => {
+		if (activeItem?.type !== "column") return null;
+		return columns.find((column) => column.id === activeItem.columnId) ?? null;
+	}, [activeItem, columns]);
 
 	const persistColumns = (next: Column[]) => {
 		setColumns(next);
@@ -397,9 +408,7 @@ function App() {
 						</SortableContext>
 						<DragOverlay>
 							{activeItem?.type === "column" ? (
-								<div className="w-[320px] rounded-2xl border border-slate-300 bg-slate-100 p-4 shadow-xl">
-									<div className="font-semibold text-slate-700">Moving column...</div>
-								</div>
+								<ColumnDragPreview column={activeColumn} />
 							) : null}
 							{activeItem?.type === "task" ? (
 								<div className="rounded-xl border border-slate-300 bg-white px-3 py-2 shadow-xl">
@@ -411,6 +420,33 @@ function App() {
 				</main>
 			</div>
 		</div>
+	);
+}
+
+function ColumnDragPreview(props: { column: Column | null }) {
+	const { column } = props;
+	if (!column) {
+		return <div className="h-[460px] w-[320px] rounded-2xl border border-slate-300 bg-slate-50/90 shadow-xl" />;
+	}
+
+	return (
+		<section className="flex h-full min-h-[460px] w-[320px] flex-col rounded-2xl border border-slate-300 bg-slate-50 shadow-xl">
+			<div className="flex items-center justify-between px-3 py-3">
+				<div className="rounded-md px-1 py-0.5 font-semibold text-slate-800 text-sm uppercase tracking-[0.14em]">
+					{column.title}
+				</div>
+				<div className="rounded-md border border-rose-200 p-1.5 text-rose-600">
+					<Trash2 className="h-3.5 w-3.5" />
+				</div>
+			</div>
+			<div className="flex flex-1 flex-col gap-2 overflow-hidden px-3 py-3">
+				{column.tasks.slice(0, 6).map((task) => (
+					<div key={task.id} className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
+						<p className="text-slate-800 text-sm leading-relaxed">{task.text}</p>
+					</div>
+				))}
+			</div>
+		</section>
 	);
 }
 
@@ -490,13 +526,21 @@ function SortableColumn(props: SortableColumnProps) {
 		}
 	}, [isEditing]);
 
+	if (isDragging) {
+		return (
+			<section
+				ref={setNodeRef}
+				style={style}
+				className="flex h-full min-h-[460px] flex-col rounded-2xl border border-slate-300 border-dashed bg-slate-100/60"
+			/>
+		);
+	}
+
 	return (
 		<section
 			ref={setNodeRef}
 			style={style}
-			className={`group/column relative flex h-full min-h-[460px] flex-col rounded-2xl border bg-slate-50 ${
-				isDragging ? "border-slate-400 opacity-70" : "border-slate-200"
-			}`}
+			className="group/column relative flex h-full min-h-[460px] flex-col rounded-2xl border border-slate-200 bg-slate-50"
 		>
 			<button
 				type="button"
@@ -512,16 +556,12 @@ function SortableColumn(props: SortableColumnProps) {
 			>
 				<Plus className="h-4 w-4" />
 			</button>
-			<div className="flex items-center justify-between gap-2 border-slate-200 border-b px-3 py-3">
+			<div
+				className="flex items-center justify-between px-3 py-3"
+				{...attributes}
+				{...listeners}
+			>
 				<div className="flex items-center gap-2">
-					<button
-						type="button"
-						className="cursor-grab rounded-md p-1 text-slate-500 transition hover:bg-slate-200 hover:text-slate-700 active:cursor-grabbing"
-						{...attributes}
-						{...listeners}
-					>
-						<GripVertical className="h-4 w-4" />
-					</button>
 					{isEditing ? (
 						<input
 							ref={columnInputRef}
@@ -550,23 +590,19 @@ function SortableColumn(props: SortableColumnProps) {
 						<button
 							type="button"
 							onClick={onStartEditingColumn}
-							className="rounded-md px-1 py-0.5 font-semibold text-slate-800 text-sm uppercase tracking-[0.14em] transition hover:bg-slate-200"
+							className="rounded-md px-1 py-0.5 text-center font-semibold text-slate-800 text-sm uppercase tracking-[0.14em] transition hover:bg-slate-200"
 						>
 							{column.title || `Column ${columnIndex + 1}`}
 						</button>
 					)}
 				</div>
-				<div className="flex items-center gap-1">
-					{!isEditing && (
-						<button
-							type="button"
-							onClick={onRemoveColumn}
-							className="rounded-md border border-rose-200 p-1.5 text-rose-600 transition hover:border-rose-300 hover:text-rose-700"
-						>
-							<Trash2 className="h-3.5 w-3.5" />
-						</button>
-					)}
-				</div>
+				<button
+					type="button"
+					onClick={onRemoveColumn}
+					className="rounded-md border border-rose-200 p-1.5 text-rose-600 transition hover:border-rose-300 hover:text-rose-700"
+				>
+					<Trash2 className="h-3.5 w-3.5" />
+				</button>
 			</div>
 
 			<div className="flex flex-1 flex-col gap-2 overflow-y-auto px-3 py-3">
@@ -673,13 +709,30 @@ function SortableTaskCard(props: SortableTaskCardProps) {
 		}
 	}, [isEditing]);
 
+	const handleTaskTabNavigation = (
+		event: KeyboardEvent<HTMLButtonElement>,
+	) => {
+		if (event.key !== "Tab") return;
+		const taskButtons = Array.from(
+			document.querySelectorAll<HTMLButtonElement>("[data-task-focus='true']"),
+		);
+		const currentIndex = taskButtons.indexOf(event.currentTarget);
+		if (currentIndex < 0) return;
+		const nextIndex = event.shiftKey ? currentIndex - 1 : currentIndex + 1;
+		if (nextIndex < 0 || nextIndex >= taskButtons.length) return;
+		event.preventDefault();
+		taskButtons[nextIndex]?.focus();
+	};
+
 	return (
 		<div
 			ref={setNodeRef}
 			style={style}
-			className={`group/task relative rounded-xl border bg-white p-3 shadow-sm ${
+			className={`group/task relative cursor-grab rounded-xl border bg-white p-3 shadow-sm active:cursor-grabbing ${
 				isDragging ? "border-slate-400 opacity-70" : "border-slate-200"
 			}`}
+			{...attributes}
+			{...listeners}
 		>
 			<button
 				type="button"
@@ -689,14 +742,6 @@ function SortableTaskCard(props: SortableTaskCardProps) {
 				<Plus className="h-3.5 w-3.5" />
 			</button>
 			<div className="flex items-start gap-2">
-				<button
-					type="button"
-					className="mt-0.5 cursor-grab rounded-md p-1 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700 active:cursor-grabbing"
-					{...attributes}
-					{...listeners}
-				>
-					<GripVertical className="h-4 w-4" />
-				</button>
 				<div className="min-w-0 flex-1">
 					{isEditing ? (
 						<input
@@ -726,6 +771,8 @@ function SortableTaskCard(props: SortableTaskCardProps) {
 						<button
 							type="button"
 							onClick={() => onStartTaskEdit(task)}
+							onKeyDown={handleTaskTabNavigation}
+							data-task-focus="true"
 							className="w-full rounded-md px-1 py-0.5 text-left text-slate-800 text-sm leading-relaxed transition hover:bg-slate-100"
 						>
 							{task.text}
@@ -737,7 +784,7 @@ function SortableTaskCard(props: SortableTaskCardProps) {
 						<button
 							type="button"
 							onClick={() => onRemoveTask(columnId, task.id)}
-							className="rounded-md border border-rose-200 p-1 text-rose-600 transition hover:border-rose-300 hover:text-rose-700"
+							className="rounded-md border border-rose-200 p-1 text-rose-600 opacity-0 transition hover:border-rose-300 hover:text-rose-700 focus-visible:opacity-100 group-hover/task:opacity-100"
 						>
 							<Trash2 className="h-3.5 w-3.5" />
 						</button>
